@@ -1,0 +1,19 @@
+name:           soniclab-filters
+version:        0.1
+cabal-version:  >= 1.2
+build-type:     Simple
+author:         miguelnegrao
+
+executable soniclab-filters
+  hs-source-dirs:  src
+  main-is:         Main.hs
+  build-depends:   
+                   base >= 4,
+                   hsc3-server >= 0.5,
+                   hosc >= 0.13,
+                   hsc3,
+                   transformers,
+                   directory,
+                   executable-path
+
+  ghc-options:     -Wall -threaded -rtsopts
