@@ -8,7 +8,7 @@ import           Sound.SC3.Server.State.Monad.Command
 import           Sound.SC3.Server.State.Monad.Process
 import           Sound.SC3.UGen
 --import           Sound.SC3.UGen.Noise.ID
-
+import qualified Sound.OpenSoundControl as OSC
 
 import           System.Environment.Executable
 import           System.IO
@@ -44,7 +44,7 @@ def = out 0 $ mce $ (convs 34 [1..14]) ++ (mceChannels $ in' 2 AR (34+14) ) ++ (
         convs:: UGen -> [Integer] -> [UGen]
         convs inBus js = mceChannels $ convolution2 inputs buffers 1 512 where
                 inputs = in' (length js) AR inBus
-                --inputs = mce $ map (\_->  whiteNoise 'a' AR) is
+                --inputs = mce $ map (\_->  whiteNoise 'a' AR) js
                 buffers = mce $ map (\i-> control KR ("buf_"++show i) 0.0) js
 
 
@@ -62,7 +62,15 @@ loop = do
         liftIO $ putStrLn "Enter q to quit:" >> hFlush stdout
         s <- liftIO getLine
         when (s /= "q") loop
+        
+pauseThread :: Double -> Server ()
+pauseThread = liftIO . OSC.pauseThread
 
+statusLoop :: Server b
+statusLoop = do
+    statusM >>= liftIO . print
+    pauseThread 1
+    statusLoop
 
 serverAction :: FilePath -> Server ()
 serverAction baseDir =  do
@@ -79,7 +87,7 @@ serverAction baseDir =  do
                 return binfos
         binfos <- extract $ sequence resultBs
         _ <- liftIO $ sequence $ map (\(i,b) -> putStrLn $ "Buffer "++show i++": " ++ show b) (zip is binfos)
-        -- _ <- fork statusLoop
+        _ <- fork statusLoop
         loop
 
 main :: IO ()
