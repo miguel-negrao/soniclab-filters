@@ -68,7 +68,7 @@ serverAction :: FilePath -> Server ()
 serverAction baseDir =  do
         --exec_ $ dumpOSC TextPrinter
         r <- rootNode
-        bs <- exec_ $ do
+        resultBs <- exec_ $ do
                 buffers <- sequence $ fmap (\p -> b_allocRead p Nothing Nothing) $ paths baseDir
                 binfos <- sequence $ map b_query buffers
                 sd <- d_recv "filt" def
@@ -77,8 +77,8 @@ serverAction baseDir =  do
                         args = fmap (\(i, buf) -> ("buf_" ++ show i, fromIntegral $ bufferId buf) ) withIndexes
                 _ <- s_new sd AddToTail r args
                 return binfos
-        info <- liftIO $ sequence $ map extract bs
-        _ <- liftIO $ sequence $ map (\(i,b) -> putStrLn $ "Buffer "++show i++": " ++ show b) (zip is info)
+        binfos <- extract $ sequence resultBs
+        _ <- liftIO $ sequence $ map (\(i,b) -> putStrLn $ "Buffer "++show i++": " ++ show b) (zip is binfos)
         -- _ <- fork statusLoop
         loop
 
